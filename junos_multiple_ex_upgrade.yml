@@ -1,0 +1,161 @@
+---
+  - name: Pre-Upgrade Facts
+    hosts: lab-ex
+    roles:
+     - Juniper.junos 
+    connection: local
+    gather_facts: no
+
+    tasks:
+     - name: Checking for NETCONF connectivity
+       wait_for: host={{ inventory_hostname }} port=830 timeout=5
+
+     - name: Retrieve information from devices running Junos OS
+       junos_get_facts:  
+         host={{ inventory_hostname }}
+       register: junos
+
+     - name: version
+       debug: msg="{{ junos.facts.version }}"
+
+  - name: Pre-Upgrade Ping
+    hosts: lab-ex
+    connection: local
+    gather_facts: no
+    tasks:
+      - name: Ping Hosts in Arp Cache
+        junos_ping:
+          host={{ inventory_hostname }}
+        register: arp_cache
+      - debug: var=arp_cache
+
+  - name: Pre-Change LLDP
+    hosts: lab-ex
+    connection: local
+    gather_facts: no
+    tasks:
+      - name: Get Pre-Change LLDP Information
+        junos_lldp:
+          host={{ inventory_hostname }}
+        register: lldp_neighbors
+      - name: Display Pre-Change LLDP Neighbor Information
+        debug:
+          var=lldp_neighbors.results
+
+
+  - name: Install Junos OS - EX4200
+    hosts: lab-ex4200
+    roles:
+      - Juniper.junos
+    connection: local
+    gather_facts: no
+    vars:
+      wait_time: 3600
+      pkg_dir: /path/to/install/file
+      OS_version: 12.3R7.7
+      OS_package: jinstall-ex-4200-12.3R7.7-domestic-signed.tgz
+      log_dir: /var/log/ansible
+
+    tasks:
+      - name: Install Junos OS package
+        junos_install_os:
+          host={{ inventory_hostname }}
+          reboot=yes
+          version={{ OS_version }}
+          package={{ pkg_dir }}/{{ OS_package }}
+          logfile={{ log_dir }}/software.log
+        register: sw
+        notify:
+          - wait_reboot
+
+    handlers:
+      - name: wait_reboot
+        wait_for: host={{ inventory_hostname }} port=830 timeout={{ wait_time }}
+        when: not sw.check_mode
+
+  - name: Install Junos OS - EX4550
+    hosts: lab-ex4550
+    roles:
+      - Juniper.junos
+    connection: local
+    gather_facts: no
+    vars:
+      wait_time: 3600
+      pkg_dir: /path/to/install/file
+      OS_version: 12.3R7.7
+      OS_package: jinstall-ex-4500-12.3R7.7-domestic-signed.tgz
+      log_dir: /var/log/ansible
+
+    tasks:
+      - name: Install Junos OS package
+        junos_install_os:
+          host={{ inventory_hostname }}
+          reboot=yes
+          version={{ OS_version }}
+          package={{ pkg_dir }}/{{ OS_package }}
+          logfile={{ log_dir }}/software.log
+        register: sw
+        notify:
+          - wait_reboot
+
+    handlers:
+      - name: wait_reboot
+        wait_for: host={{ inventory_hostname }} port=830 timeout={{ wait_time }}
+        when: not sw.check_mode
+
+
+
+  - name: Post-Upgrade Ping
+<<<<<<< HEAD
+    hosts: lab-ex
+=======
+    hosts: mdr-switches
+>>>>>>> origin/master
+    connection: local
+    gather_facts: no
+    tasks:
+      - name: Ping Hosts from Previous Run
+        junos_ping:
+         host={{ inventory_hostname }}
+         checktype=post
+         targets="{{arp_cache.results}}"
+        register: post
+      - debug: var=post
+
+  - name: Post-Change LLDP
+<<<<<<< HEAD
+    hosts: lab-ex
+=======
+    hosts: mdr-switches
+>>>>>>> origin/master
+    connection: local
+    gather_facts: no
+    tasks:
+      - name: Get Post-Change LLDP Information
+        junos_lldp:
+          host={{ inventory_hostname }}
+        register: lldp_neighbors
+      - name: Display Pre-Change LLDP Neighbor Information
+        debug:
+          var=lldp_neighbors.results
+
+  - name: Post-Upgrade Version
+<<<<<<< HEAD
+    hosts: lab-ex
+=======
+    hosts: mdr-switches
+>>>>>>> origin/master
+    roles:
+     - Juniper.junos
+    connection: local
+    gather_facts: no
+
+    tasks:
+     - name: Retrieve information from devices running Junos OS
+       junos_get_facts:
+         host={{ inventory_hostname }}
+       register: junos
+
+     - name: version
+       debug: msg="{{ junos.facts.version }}"
+
